@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "django-tutorial"
+version = "0.1.0"
+description = ""
+authors = ["jakkdl <h6+github@pm.me>"]
+readme = "README.md"
+packages = [
+    {include = "polls"}
+]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+Django = "^4.1"
+# this cannot be optional since we need to monkeypatch generic classes
+django-stubs-ext = {git = "https://github.com/typeddjango/django-stubs.git", subdirectory="django_stubs_ext"}
+
+[tool.poetry.dev-dependencies]
+# bug in poetry? Extras doesn't work
+django-stubs = {git = "https://github.com/typeddjango/django-stubs.git"} #extras = ["compatible-mypy"]}
+tox = "^3.26"
+mypy = "^0.971"
+pre-commit = "^2.20.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.django-stubs]
+django_settings_module = "polls.settings"
