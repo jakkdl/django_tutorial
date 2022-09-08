@@ -1,12 +1,26 @@
+<a href="/">index</a>
 <form action="{% url 'vote' question.id %}" method="post">
 {% csrf_token %}
 <fieldset>
     <legend><h1>{{ question.question_text }}</h1></legend>
-    {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+    {% if error_message_vote %}<p><strong>{{ error_message_vote }}</strong></p>{% endif %}
     {% for choice in question.choice_set.all %}
         <input type="radio" name="choice" id="choice{{ forloop.counter }}" value="{{ choice.id }}">
         <label for="choice{{ forloop.counter }}">{{ choice.choice_text }}</label><br>
     {% endfor %}
 </fieldset>
 <input type="submit" value="Vote">
+</form>
+<a href="{% url 'results' question.id %}">results</a>
+
+
+<form action="{% url 'add_choice' question.id %}" method="post">
+{% csrf_token %}
+<fieldset>
+    <legend><h1>Add choice to "{{ question.question_text }}"</h1></legend>
+    {% if error_message_add %}<p><strong>{{ error_message_add }}</strong></p>{% endif %}
+    text: <input type="text" name="choice_text"/> <br />
+    votes: <input type="numbers" name="choice_votes" value=0 />
+</fieldset>
+<input type="submit" value="AddChoice">
 </form>

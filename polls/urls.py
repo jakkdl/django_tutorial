@@ -1,8 +1,3 @@
-from django.contrib import admin
-from django.urls import path
-
-from . import views
-
 """mysite URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
@@ -18,12 +13,17 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.contrib import admin
+from django.urls import path
+
+from . import views
 
 
 urlpatterns = [
+    path("admin/", admin.site.urls),
     path("", views.IndexView.as_view(), name="index"),
     path("<int:pk>/", views.DetailView.as_view(), name="detail"),
     path("<int:pk>/results/", views.ResultsView.as_view(), name="results"),
     path("<int:question_id>/vote/", views.vote, name="vote"),
-    path("admin/", admin.site.urls),
+    path("<int:question_id>/add_choice/", views.add_choice, name="add_choice"),
 ]

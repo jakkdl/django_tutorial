@@ -1,12 +1,17 @@
 from datetime import timedelta
 
+import pytest
+from django.http.response import Http404
+from django.http.response import HttpResponseRedirect
+from django.test import RequestFactory
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from .models import Choice
 from .models import Question
-
-# Create your tests here.
+from .views import add_choice
+from .views import vote
 
 
 class QuestionModelTests(TestCase):
@@ -104,3 +109,54 @@ class QuestionDetailViewTests(TestCase):
         url = reverse("detail", args=(past_question.id,))
         response = self.client.get(url)
         self.assertContains(response, past_question.question_text)
+
+    def test_question(self) -> None:
+        question = create_question(question_text="MyQuestion", days=0)
+        choice1 = Choice.objects.create(question=question, choice_text="MyChoice1")
+        assert "MyQuestion" in str(choice1)
+        assert "MyChoice1" in str(choice1)
+
+    def test_vote(self) -> None:
+        """create a question, add choices to it, vote on one of them"""
+        question = create_question(question_text="MyQuestion", days=0)
+        choice1 = Choice.objects.create(question=question, choice_text="MyChoice1")
+        choice1.save()
+        request = RequestFactory().post("polls/vote", {"choice": choice1.pk})
+        response = vote(request, question.pk)
+
+        # check response
+        assert response.status_code == 302
+        assert isinstance(response, HttpResponseRedirect)
+        assert response.url == "/1/results/"
+
+        # check votes
+        assert Choice.objects.get(pk=choice1.pk).votes == 1
+        choice1.refresh_from_db()
+        assert choice1.votes == 1
+
+    def test_vote_no_question(self) -> None:
+        request = RequestFactory().post("polls/vote", {"choice": 1})
+        with pytest.raises(Http404):
+            vote(request, 1)
+
+    def test_vote_invalid_choice(self) -> None:
+        question = create_question(question_text="MyQuestion", days=0)
+        request = RequestFactory().post("polls/vote", {"choice": 1})
+        response = vote(request, question.pk)
+        self.assertContains(response, "Please select a choice")
+
+    def test_add_choice(self) -> None:
+        question = create_question(question_text="MyQuestion", days=0)
+        request = RequestFactory().post(
+            "polls/add_choice", {"choice_text": "my_choice", "choice_votes": 2}
+        )
+        add_choice(request, question.pk)
+        assert Choice.objects.filter(choice_text="my_choice")
+
+    def test_add_empty_choice(self) -> None:
+        question = create_question(question_text="MyQuestion", days=0)
+        request = RequestFactory().post(
+            "polls/add_choice", {"choice_text": "", "choice_votes": 2}
+        )
+        response = add_choice(request, question.pk)
+        self.assertContains(response, "Please enter a choice text")

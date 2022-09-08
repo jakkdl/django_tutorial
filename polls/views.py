@@ -45,9 +45,25 @@ def vote(request: HttpRequest, question_id: int) -> HttpResponse:
         return render(
             request,
             "polls/detail.html",
-            {"question": question, "error_message": "Please select a choice"},
+            {"question": question, "error_message_vote": "Please select a choice"},
         )
     selected_choice.votes = F("votes") + 1
     selected_choice.save()
     # return a HttpResponseRedirect to prevent data being posted twice if user hits back
+    return HttpResponseRedirect(reverse("results", args=(question.id,)))
+
+
+def add_choice(request: HttpRequest, question_id: int) -> HttpResponse:
+    question = get_object_or_404(Question, pk=question_id)
+    choice_text = request.POST["choice_text"]
+    choice_votes = request.POST["choice_votes"]
+    if not choice_text:
+        return render(
+            request,
+            "polls/detail.html",
+            {"question": question, "error_message_add": "Please enter a choice text"},
+        )
+    Choice.objects.create(
+        question=question, choice_text=choice_text, votes=choice_votes
+    )
     return HttpResponseRedirect(reverse("results", args=(question.id,)))
